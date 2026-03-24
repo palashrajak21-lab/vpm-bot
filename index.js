@@ -156,8 +156,12 @@ async function generateContent(topic) {
       'Authorization': `Bearer ${GROQ_KEY}`
     }
   });
-  const text = res.data.choices[0].message.content;
-  return JSON.parse(text.replace(/```json|```/g, '').trim());
+  let raw = res.data.choices[0].message.content;
+  raw = raw.replace(/```json|```/g, '').trim();
+  raw = raw.replace(/[�--]/g, '');
+  const match = raw.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('No JSON in response');
+  return JSON.parse(match[0]);
 }
 
 // ── Instagram: post image via public URL ──────────────────────
