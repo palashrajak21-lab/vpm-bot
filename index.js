@@ -1,29 +1,23 @@
 import express from "express";
 import axios from "axios";
 import fs from "fs";
-import FormData from "form-data";
 
 const app = express();
 app.use(express.json());
 
-// 🔐 ENV VARIABLES
+// 🔐 ENV
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const IG_TOKEN = process.env.IG_TOKEN;
+const IG_USER_ID = process.env.IG_USER_ID;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const PUBLIC_URL = process.env.PUBLIC_URL;
-const IG_USER_ID = process.env.IG_USER_ID;
 
-// 🚨 BASIC CHECK
-if (!PUBLIC_URL) {
-  throw new Error("PUBLIC_URL not set in environment variables");
-}
-
-// ✅ HEALTH CHECK
+// ✅ ROOT CHECK
 app.get("/", (req, res) => {
   res.send("Bot is running 🚀");
 });
 
-// 🧠 AI TEXT → JSON (SAFE PARSE)
+// 🧠 AI GENERATION
 async function generateContent(prompt) {
   const res = await axios.post(
     "https://api.groq.com/openai/v1/chat/completions",
@@ -32,7 +26,7 @@ async function generateContent(prompt) {
       messages: [
         {
           role: "user",
-          content: `Give response ONLY in JSON:
+          content: `Reply ONLY in JSON:
           {
             "caption": "...",
             "image_prompt": "..."
@@ -54,36 +48,21 @@ async function generateContent(prompt) {
   const s = raw.indexOf("{");
   const e = raw.lastIndexOf("}");
 
-  if (s === -1 || e === -1) {
-    console.error("RAW:", raw);
-    throw new Error("Invalid JSON from AI");
-  }
-
   let jsonString = raw.substring(s, e + 1);
 
-  // 🔥 CLEAN JSON (IMPORTANT FIX)
   jsonString = jsonString
     .replace(/\n/g, " ")
-    .replace(/\r/g, "")
-    .replace(/\t/g, " ")
     .replace(/[\u0000-\u001F]+/g, "");
 
-  try {
-    return JSON.parse(jsonString);
-  } catch (err) {
-    console.error("BROKEN JSON:", jsonString);
-    throw err;
-  }
+  return JSON.parse(jsonString);
 }
 
-// 🎨 IMAGE GENERATION (DUMMY - replace with real API)
+// 🎨 IMAGE (dummy for now — replace later with real API)
 async function generateImage(prompt) {
-  const imageUrl = `https://dummyimage.com/1024x1024/000/fff&text=${encodeURIComponent(
-    prompt
-  )}`;
+  const url = `https://dummyimage.com/1024x1024/000/fff&text=${encodeURIComponent(prompt)}`;
 
   const response = await axios({
-    url: imageUrl,
+    url,
     method: "GET",
     responseType: "stream"
   });
@@ -99,65 +78,75 @@ async function generateImage(prompt) {
   });
 }
 
-// 📤 UPLOAD IMAGE (MAKE PUBLIC)
+// 📤 PUBLIC IMAGE
 app.get("/image.jpg", (req, res) => {
   res.sendFile(process.cwd() + "/image.jpg");
 });
 
-// 📸 POST TO INSTAGRAM
+// 📸 INSTAGRAM POST
 async function postToInstagram(imageUrl, caption) {
-  // Step 1: Create Media
-  const createRes = await axios.post(
+  const create = await axios.post(
     `https://graph.facebook.com/v19.0/${IG_USER_ID}/media`,
     {
       image_url: imageUrl,
-      caption: caption,
+      caption,
       access_token: IG_TOKEN
     }
   );
 
-  const creationId = createRes.data.id;
-
-  // Step 2: Publish
   await axios.post(
     `https://graph.facebook.com/v19.0/${IG_USER_ID}/media_publish`,
     {
-      creation_id: creationId,
+      creation_id: create.data.id,
       access_token: IG_TOKEN
     }
   );
 }
 
-// 🚀 MAIN ROUTE
-app.post("/post", async (req, res) => {
+// 📩 TELEGRAM SEND MESSAGE
+async function sendTelegram(chatId, text) {
+  await axios.post(
+    `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,
+    {
+      chat_id: chatId,
+      text: text
+    }
+  );
+}
+
+// 🤖 TELEGRAM WEBHOOK (MAIN FIX)
+app.post(`/webhook`, async (req, res) => {
   try {
-    const userPrompt = req.body.prompt;
+    const message = req.body.message;
+    if (!message) return res.sendStatus(200);
 
-    // 1. Generate content
-    const data = await generateContent(userPrompt);
+    const chatId = message.chat.id;
+    const userText = message.text;
 
-    // 2. Generate image
-    const imagePath = await generateImage(data.image_prompt);
+    await sendTelegram(chatId, "⚡ Creating your post...");
 
-    // 3. Public URL
+    // 1. AI
+    const data = await generateContent(userText);
+
+    // 2. Image
+    await generateImage(data.image_prompt);
+
     const imageUrl = `${PUBLIC_URL}/image.jpg`;
 
-    // 4. Post to Instagram
+    // 3. Instagram
     await postToInstagram(imageUrl, data.caption);
 
-    res.json({
-      success: true,
-      caption: data.caption,
-      image_prompt: data.image_prompt
-    });
+    await sendTelegram(chatId, "✅ Posted on Instagram successfully 🚀");
+
+    res.sendStatus(200);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.sendStatus(500);
   }
 });
 
-// 🚀 START SERVER
+// 🚀 START
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log("Server running 🚀");
 });
