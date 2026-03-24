@@ -1,0 +1,16 @@
+{
+  "name": "vpm-whatsapp-bot",
+  "version": "2.0.0",
+  "description": "WhatsApp → AI → Custom Branded Image → Instagram Auto-poster for @visualpromediaofficial",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "twilio": "^4.20.0",
+    "axios": "^1.6.5",
+    "canvas": "^2.11.2"
+  }
+}

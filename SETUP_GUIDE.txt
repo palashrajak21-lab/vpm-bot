@@ -1,0 +1,71 @@
+# Visual Pro Media — WhatsApp Instagram Bot
+# Setup Guide (follow exactly in order)
+
+=============================================
+HOW IT WORKS
+=============================================
+1. You WhatsApp your idea → e.g. "consistency in business"
+2. Bot replies with your CUSTOM NAVY BRANDED IMAGE + caption preview
+3. You reply "approve" → posted to @visualpromediaofficial instantly
+4. Reply "redo" to generate a new version instead
+
+=============================================
+STEP 1 — Deploy on Railway (free, 10 mins)
+=============================================
+1. Go to https://railway.app
+2. Sign up with GitHub (free)
+3. Click "New Project" → "Empty Project"
+4. Click "Add Service" → "GitHub Repo"
+   OR drag and drop this entire folder
+5. Wait for it to build (2-3 mins)
+6. Go to "Settings" tab → "Domains" → click "Generate Domain"
+7. Copy your URL — looks like: https://vpm-bot.up.railway.app
+   ⚠️ SAVE THIS URL — you need it in Step 3
+
+=============================================
+STEP 2 — Add environment variables in Railway
+=============================================
+In Railway → your project → "Variables" tab → add these:
+
+  ANTHROPIC_API_KEY = (get from https://console.anthropic.com → API Keys)
+  PUBLIC_URL        = https://your-railway-url.up.railway.app
+  PORT              = 3000
+
+That's it — no imgbb needed! The bot generates and serves images itself.
+
+=============================================
+STEP 3 — Connect Twilio webhook (2 mins)
+=============================================
+1. Go to https://twilio.com → log in
+2. Left sidebar → Messaging → Try it out → Send a WhatsApp message
+3. Click "Sandbox Settings" tab
+4. In "WHEN A MESSAGE COMES IN" field paste:
+   https://your-railway-url.up.railway.app/webhook
+5. Make sure method is set to HTTP POST
+6. Click Save
+
+=============================================
+STEP 4 — Test it!
+=============================================
+1. Open WhatsApp on your phone
+2. Send this message to +1 415 523 8886:
+   join course-neighborhood
+   (only needed once to connect to sandbox)
+3. Then send any business topic:
+   "consistency builds empires"
+4. Wait 15 seconds → you get back your branded navy image + caption
+5. Reply: approve
+6. Check Instagram — it's posted! 🎉
+
+=============================================
+COMMANDS
+=============================================
+approve → posts to Instagram
+redo    → generates a new version
+cancel  → cancels current post
+
+=============================================
+NEED HELP?
+=============================================
+If you get stuck on any step, go back to Claude
+and share a screenshot — Claude will guide you through it.
