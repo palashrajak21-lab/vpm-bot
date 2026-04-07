@@ -873,7 +873,7 @@ app.post('/webhook/:clientId', async (req, res) => {
     await sendPhoto(client.botToken, chatId, imgBuf, preview.length > 1000 ? preview.substring(0, 1000) + '...\n\nReply approve | redo' : preview);
 
   } catch(err) {
-    console.error('Webhook error:', err.message);
+   console.error('Webhook error:', err.message, err.response?.data);
     await sendText(client.botToken, chatId, 'Something went wrong. Please try again!');
   }
 });
