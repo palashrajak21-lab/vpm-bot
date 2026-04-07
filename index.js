@@ -81,7 +81,7 @@ async function refreshAllTokens() {
     const lastRefresh = client.lastTokenRefresh ? new Date(client.lastTokenRefresh) : new Date(client.createdAt);
     const daysSince = (Date.now() - lastRefresh.getTime()) / (1000 * 60 * 60 * 24);
     console.log(client.name, '- days since last refresh:', Math.round(daysSince));
-    if (daysSince >= 50) {
+    if (daysSince >= 59) {
       console.log('Refreshing token for:', client.name);
       const newToken = await refreshToken(client);
       if (newToken) {
