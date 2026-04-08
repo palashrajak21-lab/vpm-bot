@@ -999,8 +999,8 @@ app.get('/connect', (req, res) => {
     </div>
   </div>
 
-  \${error ? '<div class="error">' + decodeURIComponent(error) + '</div>' : ''}
-  \${success ? '<div class="success">Your bot is now live! Open Telegram and send your bot a message to start posting.</div>' : ''}
+   ${error ? '<div class="error">' + decodeURIComponent(error) + '</div>' : ''}
+   ${success ? '<div class="success">Your bot is now live! Open Telegram and send your bot a message to start posting.</div>' : ''}
 
   <form method="POST" action="/connect/save">
     <label>Business Name</label>
